@@ -1,0 +1,37 @@
+.button {
+    background-color: var(--primary-color);
+    color: var(--primary-text-color);
+    border: none;
+    border-radius: .5rem;
+    font-size: 16px;
+    min-width: 5rem;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    display: inline-flex;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+    padding: .5rem 1rem;
+}
+.button:hover {
+    background-color: var(--primary-hover-color);
+    transform: translateY(-2px);
+}
+.button:active {
+    transform: translateY(0);
+}
+.button-secondary {
+    background-color: var(--secondary-color);
+}
+.button-secondary:hover {
+    background-color: var(--secondary-hover-color);
+}
+.back-button {
+
+}
+.back-button:hover {
+    text-decoration: underline;
+}
+.close-button {
+    cursor: pointer;
+}

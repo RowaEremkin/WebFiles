@@ -1,0 +1,26 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <title>Login</title>
+</head>
+<body class="form">
+    <h1 class="h1-form">Login</h1>
+    <div>
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="horizontal-list">
+                <button class="button" onclick="location.href='{% url 'index' %}';">Back</button>
+                <button class="button" type="submit">Log in</button>
+            </div>
+
+        </form>
+        <p>Don't have an account? <button class="button" onclick="location.href='{% url 'register' %}';">Register here</button></p>
+    </div>
+
+</body>
+</html>

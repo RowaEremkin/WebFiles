@@ -1,0 +1,115 @@
+@import 'colors.css';
+@import 'button.css';
+@import 'item.css';
+@import 'path.css';
+@import 'modal.css';
+@import 'control.css';
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+}
+p {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+.form{
+    justify-content: center;
+    display: grid;
+}
+.h1-form{
+    text-align: center;
+}
+.auth-form{
+    border: .25rem solid var(--background-border-color);
+    border-radius: .5rem;
+    padding: .5rem;
+    width: 20rem;
+}
+.fixed-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2rem;
+    background-color: var(--primary-color);
+    color: var(--primary-text-color);
+    padding: 0.5rem 0.1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+}
+body {
+    padding-top: 2rem;
+}
+#site-name{
+    padding: .5rem;
+    gap: .5rem;
+    display: flex;
+    align-items: center;
+}
+#file-manager {
+    display: flex;
+    gap: 0.1rem 1rem;
+}
+#folder-structure {
+    width: 99%;
+}
+#upload-progress-bar {
+    width: 100%;
+    margin-top: 10px;
+}
+date-label{
+    color: var(--background-alter-color);
+}
+#controls {
+    gap: .5rem;
+}
+input.form-control {
+    padding: 0.5rem;
+    border: .25rem solid var(--background-border-color);
+    border-radius: .25rem;
+    transition: border-color 0.3s ease;
+}
+input.form-control:focus {
+    border-color: var(--primary-hover-color);
+    outline: none;
+}
+namelabel{
+    text-align: start;
+}
+.error-message {
+    color: var(--error-color);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+.horizontal-list{
+    display: flex;
+    justify-content: space-between;
+}
+@media screen and (max-width: 768px){
+    #controls {
+    flex-direction: column !important;
+}
+    body {
+        padding-top: 2rem;
+        padding-right: .5rem;
+        padding-left: .5rem;
+    }
+    .item {
+        padding: 0;
+    }
+    .auth-form {
+        width: 95%;
+    }
+    .form{
+        justify-content: normal;
+    }
+    date-label{
+        width: 5rem;
+        text-align: end;
+    }
+}

@@ -1,0 +1,9 @@
+.path{
+    transition: all 0.3s ease-in-out;
+    display: inline-block;
+    margin-top: 1rem;
+}
+.path-click:hover{
+    cursor: pointer;
+    text-decoration: underline;
+}

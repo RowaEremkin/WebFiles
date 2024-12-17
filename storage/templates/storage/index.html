@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Files</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <div id="user-info" class="fixed-header">
+        <h1 id="site-name">Files</h1>
+        <div style="display: flex; gap: 1rem; align-items: center ">
+            {% if request.user.is_authenticated %}
+                <span>Login as: {{ request.user.username }}</span>
+                <form method="post" action="{% url 'logout' %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button class="button button-secondary" type="submit">Logout</button>
+                </form>
+            {% else %}
+                <button class="button button-secondary" onclick="location.href='{% url 'login' %}';">Login</button>
+                <button class="button button-secondary" onclick="location.href='{% url 'register' %}';">Registration</button>
+            {% endif %}
+        </div>
+
+    </div>
+    <div id="file-manager">
+        <div id="folder-structure">
+            <div id="current-path"></div>
+            <div id="folder-tree">
+
+            </div>
+            <div id="controls"></div>
+        </div>
+    </div>
+    <div id="modalFile" class="modal">
+        <div id="modalContent" class="modal-content">
+            <div class="horizontal-list">
+                <button class="button" onclick=closeModalFile()>Back</button>
+                <button class="button" id="modalDownloadButton">Download file</button>
+            </div>
+            <div id="modalFileContent"></div>
+        </div>
+    </div>
+    <script>
+        const userId = "{{ request.user.id }}";
+    </script>
+    <script src="{% static 'js/svg.js' %}"></script>
+    <script src="{% static 'js/media_view.js' %}"></script>
+    <script src="{% static 'js/index.js' %}"></script>
+</body>
+</html>

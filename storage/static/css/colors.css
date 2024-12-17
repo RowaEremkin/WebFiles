@@ -1,0 +1,14 @@
+:root {
+    --primary-color: #007BFF;
+    --primary-hover-color: #1381ff;
+    --primary-text-color: white;
+    --secondary-color: #0056d3;
+    --secondary-hover-color: #1b5fc3;
+    --accent-color: #ff00fb;
+    --background-color: white;
+    --background-border-color: #c0dfff;
+    --background-text-color: black;
+    --background-alter-color: gray;
+    --text-color: #2c3e50;
+    --error-color: #ff0000;
+}
