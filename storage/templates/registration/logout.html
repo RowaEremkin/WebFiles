@@ -8,11 +8,15 @@
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body class="form">
-    <h1 class="h1-form">Logouted</h1>
+    <h1 class="h1-form">{{ t.logout }}</h1>
 
     <div class="auth-form">
-        <h2>You have been logged out</h2>
-        <button class="button" onclick="location.href='{% url 'index' %}';">Back</button>
+        <h2>{{ t.you_have_been_logged_out }}</h2>
+        <button class="button" onclick="location.href='{% url 'index' %}';">{{ t.back }}</button>
     </div>
+    <script>
+        const currentLanguage = "{{ lang }}";
+        const t = "{{ t }}";
+    </script>
 </body>
 </html>

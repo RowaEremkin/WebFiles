@@ -9,17 +9,18 @@
 </head>
 <body>
     <div id="user-info" class="fixed-header">
-        <h1 id="site-name">Files</h1>
+        <h1 id="site-name">{{ t.site_name }}</h1>
         <div style="display: flex; gap: 1rem; align-items: center ">
+            <button class="button button-secondary" onclick=choiceLanguage()>{{ lang }}</button>
             {% if request.user.is_authenticated %}
-                <span>Login as: {{ request.user.username }}</span>
+                <span>{{ t.login_as}}: {{ request.user.username }}</span>
                 <form method="post" action="{% url 'logout' %}" style="display:inline;">
                     {% csrf_token %}
-                    <button class="button button-secondary" type="submit">Logout</button>
+                    <button class="button button-secondary" type="submit">{{ t.logout }}</button>
                 </form>
             {% else %}
-                <button class="button button-secondary" onclick="location.href='{% url 'login' %}';">Login</button>
-                <button class="button button-secondary" onclick="location.href='{% url 'register' %}';">Registration</button>
+                <button class="button button-secondary" onclick="location.href='{% url 'login' %}';">{{ t.login }}</button>
+                <button class="button button-secondary" onclick="location.href='{% url 'register' %}';">{{ t.registration }}</button>
             {% endif %}
         </div>
 
@@ -30,20 +31,23 @@
             <div id="folder-tree">
 
             </div>
-            <div id="controls"></div>
+            <div id="controls" style="display: none"></div>
         </div>
     </div>
     <div id="modalFile" class="modal">
         <div id="modalContent" class="modal-content">
             <div class="horizontal-list">
-                <button class="button" onclick=closeModalFile()>Back</button>
-                <button class="button" id="modalDownloadButton">Download file</button>
+                <button class="button" onclick=closeModalFile()>{{ t.back }}</button>
+                <button class="button" id="modalDownloadButton">{{ t.download}}</button>
             </div>
             <div id="modalFileContent"></div>
         </div>
     </div>
+
     <script>
         const userId = "{{ request.user.id }}";
+        const currentLanguage = "{{ lang }}";
+        const t = "{{ t }}";
     </script>
     <script src="{% static 'js/svg.js' %}"></script>
     <script src="{% static 'js/media_view.js' %}"></script>

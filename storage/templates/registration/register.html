@@ -8,15 +8,19 @@
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body class="form">
-    <h1 class="h1-form">Register</h1>
+    <h1 class="h1-form">{{ t.registration }}</h1>
     <form method="post" class="auth-form">
         {% csrf_token %}
         {{ form.as_p }}
         <div class="horizontal-list">
-            <button class="button" onclick="location.href='{% url 'index' %}';">Back</button>
-            <button class="button" type="submit">Register</button>
+            <button class="button" onclick="location.href='{% url 'index' %}';">{{ t.back }}</button>
+            <button class="button" type="submit">{{ t.register }}</button>
         </div>
     </form>
+    <script>
+        const currentLanguage = "{{ lang }}";
+        const t = "{{ t }}";
+    </script>
     <script src="{% static 'js/account.js' %}"></script>
 </body>
 </html>

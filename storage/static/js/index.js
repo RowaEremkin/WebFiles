@@ -4,6 +4,7 @@ const socket = new WebSocket('ws://' + window.location.hostname + ':8000/ws/file
 let current_folder_id
 let folder_access = false
 let folderPath = ""
+let tr = null;
 socket.onmessage = function(event) {
     const response = JSON.parse(event.data);
     console.log("OnMessage response: ", response)
@@ -22,7 +23,7 @@ socket.onmessage = function(event) {
         updateFolderTree(response.tree, response.parentFolderId);
 
         // Скрываем элементы, если доступ к папке запрещен
-        document.getElementById('controls').style.display = folder_access==false?'none':"flex";
+        document.getElementById('controls').style.display = folder_access===false?'none':"flex";
     }
     else if (response.action === "upload_success") {
         console.log("Upload successful:", response.data, " parentFolderId: ", response.parentFolderId);
@@ -462,7 +463,7 @@ function renameFile(fileId) {
     if (fileElement) {
         nameLabel = fileElement.querySelector('nameLabel');
     }
-    const newName = prompt("Enter new file name:", nameLabel?.textContent);
+    const newName = prompt(tr.enter_new_file_name, nameLabel?.textContent);
 
     if (newName) {
         fetch(`/rename_file/${fileId}/`, {
@@ -478,12 +479,11 @@ function renameFile(fileId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                console.log(`File rename to: ${data.new_name}`);
                 if (nameLabel) {
                     nameLabel.textContent = newName;
                 }
             } else {
-                console.error('Error on file rename');
+                console.error(tr.failed_to_rename_file);
             }
         })
         .catch(error => console.error('Error:', error));
@@ -522,7 +522,7 @@ function toggleFileAccess(fileId) {
 function deleteFile(fileId) {
     const csrfToken = getCsrfToken(); // Получите CSRF-токен из cookie
 
-    if (confirm("Вы уверены, что хотите удалить этот файл?")) {
+    if (confirm(tr.are_you_sure_you_want_to_delete_this_file)) {
         fetch(`/delete_file/${fileId}/`, {
             method: 'POST',
             headers: {
@@ -533,16 +533,15 @@ function deleteFile(fileId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                console.log(`Файл с ID ${fileId} успешно удален.`);
                 const fileElement = document.getElementById(`file-${fileId}`);
                 if (fileElement) {
                     fileElement.remove();
                 }
             } else {
-                console.error('Ошибка при удалении файла');
+                console.error(tr.failed_to_delete_file);
             }
         })
-        .catch(error => console.error('Ошибка:', error));
+        .catch(error => console.error('Error:', error));
     }
 }
 function renameFolder(folderId){
@@ -553,7 +552,7 @@ function renameFolder(folderId){
     if (folderElement) {
         nameLabel = folderElement.querySelector('nameLabel');
     }
-    const newName = prompt("Enter new folder name:", nameLabel.textContent);
+    const newName = prompt(tr.enter_new_folder_name, nameLabel.textContent);
 
     if (newName) {
         fetch(`/rename_folder/${folderId}/`, {
@@ -569,12 +568,11 @@ function renameFolder(folderId){
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                console.log(`Folder rename to: ${data.new_name}`);
                 if (nameLabel) {
                     nameLabel.textContent = newName;
                 }
             } else {
-                console.error('Error on rename folder');
+                console.error(tr.failed_to_rename_folder);
             }
         })
         .catch(error => console.error('Error:', error));
@@ -613,7 +611,7 @@ function toggleFolderAccess(folderId) {
 function deleteFolder(folderId) {
     const csrfToken = getCsrfToken(); // Получите CSRF-токен из cookie
 
-    if (confirm("Вы уверены, что хотите удалить эту папку и все ее содержимое?")) {
+    if (confirm(tr.are_you_sure_you_want_to_delete_this_folder)) {
         fetch(`/delete_folder/${folderId}/`, {
             method: 'POST',
             headers: {
@@ -624,30 +622,25 @@ function deleteFolder(folderId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                console.log(`Папка с ID ${folderId} успешно удалена.`);
                 const folderElement = document.getElementById(`folder-${folderId}`);
                 if (folderElement) {
                     folderElement.remove();
                 }
             } else {
-                console.error('Ошибка при удалении папки');
+                console.error(tr.failed_to_delete_folder);
             }
         })
-        .catch(error => console.error('Ошибка:', error));
+        .catch(error => console.error('Error:', error));
     }
 }
 function createFolder() {
-    console.log("CreateFolder")
-    const folderName = prompt("Enter folder name:");
+    const folderName = prompt(tr.enter_folder_name);
     if (!folderName) {
-        alert("Folder name can not be empty.");
+        alert(tr.folder_name_can_not_be_empty);
         return;
     }
-
-    const parentId = current_folder_id; // Получаем текущий родительский ID
-
-    const csrfToken = getCsrfToken(); // Получаем CSRF-токен
-
+    const parentId = current_folder_id;
+    const csrfToken = getCsrfToken();
     fetch(`/create_folder/?parent_id=${parentId}`, {
         method: "POST",
         headers: {
@@ -658,7 +651,7 @@ function createFolder() {
     })
         .then(response => {
             if (!response.ok) {
-                throw new Error("Failed to create folder");
+                throw new Error(tr.failed_to_create_folder);
             }
             return response.json();
         })
@@ -675,12 +668,11 @@ function createFolder() {
         });
 }
 function createFile() {
-    console.log("CreateFile")
-    const fileName = prompt("Введите название файла:");
-    const fileContent = prompt("Введите содержимое файла:");
+    const fileName = prompt(tr.enter_file_name);
+    const fileContent = prompt(tr.enter_file_content);
 
     if (!fileName) {
-        alert("Название файла не может быть пустым.");
+        alert(tr.file_name_can_not_be_empty);
         return;
     }
 
@@ -698,15 +690,14 @@ function createFile() {
     })
         .then(response => {
             if (!response.ok) {
-                throw new Error("Failed to create file");
+                throw new Error(tr.failed_to_create_file);
             }
             return response.json();
         })
         .then(data => {
             if (data.error) {
-                alert(`Ошибка: ${data.error}`);
+                alert(`Error: ${data.error}`);
             } else {
-                alert("Файл успешно создан.");
                 updateFolder()
             }
         })
@@ -727,24 +718,56 @@ function openFolder(folderId) {
 function updateFolder() {
     openFolder(current_folder_id)
 }
+function setLanguage(lang) {
+    fetch(`/language/${lang}/`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log(`Set language to: ${data.lang}`);
+            location.reload()
+        } else {
+            console.error('Error on set language');
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
 function goToPath(folder_path){
     socket.send(JSON.stringify({ action: "answer_path", tree_path: folder_path }));
 }
 function closeModalFile(){
     document.getElementById('modalFile').style.display = 'none';
 }
+function choiceLanguage(){
+    let lang = currentLanguage
+    console.log("Lang: ", lang)
+    setLanguage(lang==='en'?'ru':'en')
+}
 document.addEventListener("DOMContentLoaded", function() {
+    const jsonString = t.replace(/&#x27;/g, "\"");
+    try {
+        tr = JSON.parse(jsonString);
+    }
+    catch(e){
+        console.error(e)
+    }
     const createFolderButton = document.createElement("button");
     createFolderButton.classList.add('control-button')
-    createFolderButton.textContent = ("Create folder");
+    createFolderButton.textContent = tr?.create_folder;
     createFolderButton.insertAdjacentHTML('afterbegin', Svg.createFolder);
     createFolderButton.onclick = createFolder;
+    //createFolderButton.style.display = 'none';
 
     const createFileButton = document.createElement("button");
     createFileButton.classList.add('control-button')
-    createFileButton.textContent = ("Create file");
+    createFileButton.textContent = tr?.create_file;
     createFileButton.insertAdjacentHTML('afterbegin', Svg.createFile);
     createFileButton.onclick = createFile;
+    //createFileButton.style.display = 'none';
 
     const controls = document.getElementById("controls");
     controls.appendChild(createFolderButton);
@@ -754,6 +777,7 @@ document.addEventListener("DOMContentLoaded", function() {
     fileInput.className = 'control-button';
     fileInput.type = 'file';
     fileInput.id = 'file-input';
+    //fileInput.style.display = 'none';
     fileInput.multiple = true; // Позволяет выбирать несколько файлов
     fileInput.onchange = handleFileInputChange; // Устанавливаем обработчик события
 
@@ -781,7 +805,7 @@ document.addEventListener("DOMContentLoaded", function() {
     uploadButton.id = 'upload-button';
     uploadButton.onclick = uploadFiles; // Устанавливаем обработчик события
     uploadButton.style.display = 'none'; // Изначально скрываем кнопку
-    uploadButton.textContent = 'Upload'; // Текст кнопки
+    uploadButton.textContent = tr?.upload; // Текст кнопки
     uploadButton.insertAdjacentHTML('afterbegin', Svg.upload);
 
     controls.appendChild(uploadButton)

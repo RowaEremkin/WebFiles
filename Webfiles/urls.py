@@ -26,8 +26,10 @@ from django.urls import re_path
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('i18n/', include('django.conf.urls.i18n')),
+    path('language/<str:lang>/', views.set_language, name='language'),
     path('accounts/login/', views.login_view, name='login'),
-    path('accounts/logout/', auth_views.LogoutView.as_view(template_name='registration/logout.html'), name='logout'),
+    path('accounts/logout/', views.logout_view , name='logout'),
     path('accounts/register/', views.register_view, name='register'),
     path('upload/', views.upload_file, name='upload_file'),
     path('create_folder/', views.create_folder, name='create_folder'),

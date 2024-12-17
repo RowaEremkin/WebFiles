@@ -1,11 +1,15 @@
 import os
 import shutil
 import traceback
+from lib2to3.fixes.fix_input import context
+from zoneinfo import reset_tzpath
 
 from asgiref.sync import sync_to_async
-from django.contrib.auth import login, authenticate
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import login, authenticate, logout
 from django.core.files.base import ContentFile
-
+from django.utils import translation
+from django.shortcuts import redirect
 from . import consumers, views_sync
 from .consumers import get_path
 from .models import Folder, File
@@ -15,7 +19,9 @@ from django.core.files.storage import FileSystemStorage
 from django.http import FileResponse, Http404
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.contrib.auth import views as auth_views
 from .forms import CustomUserCreationForm, CustomLoginForm
+from .translations import get_translations
 from .views_sync import get_user_id, get_folder, create_folder_sync, create_file_sync, create_folder_bd, create_file_bd, \
     delete_file_sync, delete_folder_async, get_file_or_404, get_folder_or_404_sync, change_file_public, \
     save_file, save_folder, get_child_folders, get_child_files, set_file_public, \
@@ -24,11 +30,20 @@ from .views_sync import get_user_id, get_folder, create_folder_sync, create_file
 
 def index(request, folder_path=""):
     user = request.user
+    user_language = request.session.get('language', 'en')
     context = {
         'folder_path': folder_path,
+        't': get_translations(user_language),
+        'lang': user_language
     }
 
     return render(request, 'storage/index.html', context)
+@csrf_exempt
+def set_language(request, lang):
+    user_language = lang
+    translation.activate(user_language)
+    request.session['language'] = user_language
+    return JsonResponse({'success': True},status=200)
 async def get_file_path(file_instance):
     if file_instance == None:
         return None
@@ -118,6 +133,8 @@ async def open_file(request, file_id):
     except File.DoesNotExist:
         raise Http404("File not found")
 def register_view(request):
+    user_language = request.session.get('language', 'en')
+    t = get_translations(user_language)
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
@@ -127,11 +144,18 @@ def register_view(request):
         else:
             messages.error(request, 'There was an error with your registration.')
     else:
-        form = CustomUserCreationForm()
+        form = CustomUserCreationForm(t=t)
 
-    return render(request, 'registration/register.html', {'form': form})
+    context = {
+        'form': form,
+        't': t,
+        'lang': user_language
+    }
+    return render(request, 'registration/register.html', context)
 
 def login_view(request):
+    user_language = request.session.get('language', 'en')
+    t = get_translations(user_language)
     if request.method == 'POST':
         form = CustomLoginForm(data=request.POST)
         if form.is_valid():
@@ -147,34 +171,45 @@ def login_view(request):
         else:
             messages.error(request, 'There was an error with your login.')
     else:
-        form = CustomLoginForm()
+        form = CustomLoginForm(t=t)
 
-    return render(request, 'registration/login.html', {'form': form})
+    context = {
+        'form': form,
+        't': t,
+        'lang': user_language
+    }
+    return render(request, 'registration/login.html', context)
+def logout_view(request):
+    user_language = request.session.get('language', 'en')
+    t = get_translations(user_language)
+    context = {
+        't': t,
+        'lang': user_language
+    }
+    logout(request)
+    return render(request, 'registration/logout.html', context)
+
 @login_required
 async def create_folder(request):
     if request.method == "POST":
-
+        #t = get_translations(request.user.language)
         try:
-            # Получаем данные из запроса
             folder_name = request.POST.get("name")
-            parent_id = request.GET.get("parent_id")  # Или request.POST, если передаёте в теле
-            print("Try to create folder: ", folder_name, " in folder_id: ", parent_id)
-
+            parent_id = request.GET.get("parent_id")
+            #print("Try to create folder: ", folder_name, " in folder_id: ", parent_id)
             if not folder_name:
                 return JsonResponse({"error": "Folder name is required."}, status=400)
-
-            # Получаем родительскую папку (если указана)
             parent_folder = None
             if parent_id:
                 parent_folder = await get_folder(parent_id, request.user)
                 if not parent_folder:
                     return JsonResponse({"error": "Parent folder not found."}, status=404)
-            print("parent_folder: ", parent_folder)
+            #print("parent_folder: ", parent_folder)
             new_folder = await create_folder_bd(folder_name, request.user, parent_folder)
             folder_name = new_folder.name
             folder_path = await consumers.get_path(parent_id)
             folder_path = os.path.join(folder_path, folder_name)
-            print("FolderPath: ", folder_path)
+            #print("FolderPath: ", folder_path)
             await create_folder_sync(folder_path)
 
             user_id = await get_user_id(request)
