@@ -7,10 +7,10 @@ let folderPath = ""
 let tr = null;
 socket.onmessage = function(event) {
     const response = JSON.parse(event.data);
-    console.log("OnMessage response: ", response)
-    console.log("parentFolderId: ", response.parentFolderId)
-    console.log("folderAccess: ", response.folderAccess)
-    console.log("tree_path: ", response.treePath)
+    //console.log("OnMessage response: ", response)
+    //console.log("parentFolderId: ", response.parentFolderId)
+    //console.log("folderAccess: ", response.folderAccess)
+    //console.log("tree_path: ", response.treePath)
     folderPath = transformPath(response.treePath)
     if (response.action === "update") {
         current_folder_id = response.parentFolderId
@@ -22,12 +22,10 @@ socket.onmessage = function(event) {
         }
         updateFolderTree(response.tree, response.parentFolderId);
 
-        // Скрываем элементы, если доступ к папке запрещен
         document.getElementById('controls').style.display = folder_access===false?'none':"flex";
     }
     else if (response.action === "upload_success") {
-        console.log("Upload successful:", response.data, " parentFolderId: ", response.parentFolderId);
-        // Обновляем дерево файлов после успешной загрузки
+        //console.log("Upload successful:", response.data, " parentFolderId: ", response.parentFolderId);
         socket.send(JSON.stringify({ action: "reload", folder_id: response.parentFolderId }));
     }
     else if (response.action === "upload_error") {
@@ -35,13 +33,13 @@ socket.onmessage = function(event) {
     }
     else if (response.action === "question_path"){
         let tree_path = window.location.pathname
-        console.log("Send answer_path: ", tree_path)
+        //console.log("Send answer_path: ", tree_path)
         goToPath(tree_path);
     }
     history.pushState(null, '', folderPath);
 };
 function updateFolderTree(treeData, parentFolderId = null) {
-    console.log("UpdateFolderTree: ", parentFolderId)
+    //console.log("UpdateFolderTree: ", parentFolderId)
     function createPathLink(path, text){
         const link = document.createElement('a');
         link.textContent = text;
@@ -87,7 +85,6 @@ function updateFolderTree(treeData, parentFolderId = null) {
     })
     const folderTree = document.getElementById("folder-tree");
     folderTree.innerHTML = "";
-    // Создание кнопки "Назад"
     if (parentFolderId !== null) {
         const backButton = document.createElement("button");
         backButton.insertAdjacentHTML('afterbegin', Svg.backFolder);
@@ -98,7 +95,7 @@ function updateFolderTree(treeData, parentFolderId = null) {
         folderTree.appendChild(backButton);
     }
     function createFolderList(items, parentElement) {
-        console.log("CreateFolderList");
+        //console.log("CreateFolderList");
         items.forEach(item => {
             const li = document.createElement("button");
             li.classList.add("item");
@@ -219,7 +216,7 @@ function updateFolderTree(treeData, parentFolderId = null) {
         });
     }
 
-    createFolderList(treeData, folderTree); // Генерация дерева
+    createFolderList(treeData, folderTree);
 }
 
 function getCsrfToken(){
@@ -230,8 +227,6 @@ function getFromDocument(path) {
     if (csrfToken) {
         return csrfToken;
     }
-
-    // Если токен в cookie
     const name = "csrftoken";
     const cookies = document.cookie.split(';');
     for (let i = 0; i < cookies.length; i++) {
@@ -245,11 +240,8 @@ function getFromDocument(path) {
 }
 function decodeMimeString(mimeString) {
     try{
-        // Удаляем префиксы и суффиксы
         const base64String = mimeString.replace(/^=\?utf-8\?b\?/, '').replace(/\?=$/, '');
-        // Декодируем из Base64
         const decodedBytes = atob(base64String);
-        // Преобразуем байты в строку UTF-8
         const decodedString = decodeURIComponent(escape(decodedBytes));
         return decodedString;
     }
@@ -281,13 +273,12 @@ function toggleContextMenu(e, element){
     }
     document.addEventListener('click', function handleClickOutside(event) {
         if (!element.contains(event.target)) {
-            cm.classList.remove("control-panel-active"); // Убираем класс
+            cm.classList.remove("control-panel-active");
             current_context_menu_element = null
-            document.removeEventListener('click', handleClickOutside); // Убираем обработчик после закрытия
+            document.removeEventListener('click', handleClickOutside);
         }
     });
 }
-// Функции файловой системы
 async function handleFileInputChange(){
     const uploadButton = document.getElementById("upload-button");
     const fileInput = document.getElementById("file-input");
@@ -303,7 +294,7 @@ async function uploadFiles() {
     const fileInput = document.getElementById("file-input");
     function updateProgressBar(uploaded, total) {
         const percentage = (uploaded / total) * 100;
-        progressBar.value = percentage; // Update the progress bar value
+        progressBar.value = percentage;
 
         if (uploaded === total) {
             console.log("All files uploaded");
@@ -377,7 +368,7 @@ function downloadFile(fileId) {
         }
         const contentDisposition = response.headers.get('Content-Disposition');
         let filename = 'downloaded_file';
-        console.log("contentDisposition: ", contentDisposition)
+        //console.log("contentDisposition: ", contentDisposition)
         filename = decodeMimeString(contentDisposition)
         if (filename && filename.includes('attachment')) {
             const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
@@ -387,19 +378,19 @@ function downloadFile(fileId) {
                 filename = matches[1].replace(/['"]/g, '');
             }
         }
-        console.log("filename: ", filename)
+        //console.log("filename: ", filename)
 
-        return response.blob().then(blob => ({ blob, filename })); // Возвращаем Blob и имя файла
+        return response.blob().then(blob => ({ blob, filename }));
     })
     .then(({ blob, filename }) => {
-        const url = window.URL.createObjectURL(blob); // Создаем URL для Blob
-        const a = document.createElement('a'); // Создаем элемент <a>
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        a.download = filename; // Используем имя файла из заголовка
+        a.download = filename;
         document.body.appendChild(a);
-        a.click(); // Имитируем клик для скачивания
-        window.URL.revokeObjectURL(url); // Освобождаем память
+        a.click();
+        window.URL.revokeObjectURL(url);
     })
     .catch(error => console.error('Error downloading file:', error));
 }
@@ -432,7 +423,6 @@ function openFile(fileId) {
         document.getElementById('modalFileContent').innerHTML = `<iframe class="file-frame" src="${url}" ></iframe>`;
         document.getElementById('modalFile').style.display = 'block';
 
-        // Обработка кнопки загрузки
         document.getElementById('modalDownloadButton').onclick = function() {
             downloadFile(fileId)
         };
@@ -455,7 +445,6 @@ function openFile(fileId) {
     })
     .catch(error => console.error('Error opening file:', error));
 }
-
 function renameFile(fileId) {
     const csrfToken = getCsrfToken();
     const fileElement = document.getElementById(`file-${fileId}`);
@@ -492,7 +481,7 @@ function renameFile(fileId) {
 function toggleFileAccess(fileId) {
     const csrfToken = getCsrfToken();
     let elementId = 'access-file-toggle-'+fileId;
-    console.log("elementId: ", fileId)
+    //console.log("elementId: ", fileId)
     let accessToggle = document.getElementById(elementId)
     let iconId = 'icon-'+fileId;
     let icon = document.getElementById(iconId)
@@ -506,7 +495,7 @@ function toggleFileAccess(fileId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            console.log(`File access changed: ${data.is_public ? 'public' : 'private'}`);
+            //console.log(`File access changed: ${data.is_public ? 'public' : 'private'}`);
             if(accessToggle !== null){
                 accessToggle.innerHTML = ('afterbegin', data.is_public?Svg.publicAccess:Svg.privateAccess)
             }
@@ -520,8 +509,7 @@ function toggleFileAccess(fileId) {
     .catch(error => console.error('Error:', error));
 }
 function deleteFile(fileId) {
-    const csrfToken = getCsrfToken(); // Получите CSRF-токен из cookie
-
+    const csrfToken = getCsrfToken();
     if (confirm(tr.are_you_sure_you_want_to_delete_this_file)) {
         fetch(`/delete_file/${fileId}/`, {
             method: 'POST',
@@ -546,7 +534,6 @@ function deleteFile(fileId) {
 }
 function renameFolder(folderId){
     const csrfToken = getCsrfToken();
-
     const folderElement = document.getElementById(`folder-${folderId}`);
     let nameLabel = null
     if (folderElement) {
@@ -581,7 +568,6 @@ function renameFolder(folderId){
 function toggleFolderAccess(folderId) {
     const csrfToken = getCsrfToken();
     let elementId = 'access-folder-toggle-'+folderId;
-    console.log("elementId: ", elementId)
     let accessToggle = document.getElementById(elementId)
     let iconId = 'icon-'+folderId;
     let icon = document.getElementById(iconId)
@@ -595,7 +581,7 @@ function toggleFolderAccess(folderId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            console.log(`Folder ${folderId} access changed: ${data.is_public ? 'Public' : 'Private'}`);
+            //console.log(`Folder ${folderId} access changed: ${data.is_public ? 'Public' : 'Private'}`);
             if(accessToggle !== null){
                 accessToggle.innerHTML = ('afterbegin', data.is_public?Svg.publicAccess:Svg.privateAccess)
             }
@@ -659,7 +645,7 @@ function createFolder() {
             if (data.error) {
                 alert(`Error: ${data.error}`);
             } else {
-                console.log('Folder with name ${folderName} created');
+                //console.log('Folder with name ${folderName} created');
                 updateFolder()
             }
         })
@@ -706,12 +692,12 @@ function createFile() {
         });
 }
 function backFolder(folderId) {
-    console.log("Back Folder: ", folderId)
+    //console.log("Back Folder: ", folderId)
     const messageObject = { action: "back", folder_id: folderId };
     socket.send(JSON.stringify(messageObject));
 }
 function openFolder(folderId) {
-    console.log("Open Folder: ", folderId)
+    //console.log("Open Folder: ", folderId)
     const messageObject = { action: "reload", folder_id: folderId };
     socket.send(JSON.stringify(messageObject));
 }
@@ -728,7 +714,7 @@ function setLanguage(lang) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            console.log(`Set language to: ${data.lang}`);
+            //console.log(`Set language to: ${data.lang}`);
             location.reload()
         } else {
             console.error('Error on set language');
@@ -744,7 +730,7 @@ function closeModalFile(){
 }
 function choiceLanguage(){
     let lang = currentLanguage
-    console.log("Lang: ", lang)
+    //console.log("Lang: ", lang)
     setLanguage(lang==='en'?'ru':'en')
 }
 document.addEventListener("DOMContentLoaded", function() {
@@ -778,34 +764,33 @@ document.addEventListener("DOMContentLoaded", function() {
     fileInput.type = 'file';
     fileInput.id = 'file-input';
     //fileInput.style.display = 'none';
-    fileInput.multiple = true; // Позволяет выбирать несколько файлов
-    fileInput.onchange = handleFileInputChange; // Устанавливаем обработчик события
+    fileInput.multiple = true;
+    fileInput.onchange = handleFileInputChange;
 
     controls.appendChild(fileInput)
 
-    // Добавляем CSRF токен (если используется Django)
     const csrfToken = document.createElement('input');
     csrfToken.type = 'hidden';
     csrfToken.name = 'csrfmiddlewaretoken';
-    csrfToken.value = '{{ csrf_token }}'; // Замените на актуальный токен при
+    csrfToken.value = '{{ csrf_token }}';
 
     controls.appendChild(csrfToken)
 
 
     const progressBar = document.createElement('progress');
     progressBar.id = 'upload-progress-bar';
-    progressBar.value = 0; // Начальное значение прогресса
-    progressBar.max = 100; // Максимальное значение прогресса
-    progressBar.style.display = 'none'; // Изначально скрываем прогресс-бар
+    progressBar.value = 0;
+    progressBar.max = 100;
+    progressBar.style.display = 'none';
 
     controls.appendChild(progressBar)
 
     const uploadButton = document.createElement('button');
     uploadButton.className = 'control-button';
     uploadButton.id = 'upload-button';
-    uploadButton.onclick = uploadFiles; // Устанавливаем обработчик события
-    uploadButton.style.display = 'none'; // Изначально скрываем кнопку
-    uploadButton.textContent = tr?.upload; // Текст кнопки
+    uploadButton.onclick = uploadFiles;
+    uploadButton.style.display = 'none';
+    uploadButton.textContent = tr?.upload;
     uploadButton.insertAdjacentHTML('afterbegin', Svg.upload);
 
     controls.appendChild(uploadButton)

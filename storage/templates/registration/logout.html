@@ -12,11 +12,13 @@
 
     <div class="auth-form">
         <h2>{{ t.you_have_been_logged_out }}</h2>
-        <button class="button" onclick="location.href='{% url 'index' %}';">{{ t.back }}</button>
+        <button class="button" id="backButton" onclick="location.href='{% url 'index' %}';">{{ t.back }}</button>
     </div>
+    <script src="{% static 'js/svg.js' %}"></script>
     <script>
         const currentLanguage = "{{ lang }}";
         const t = "{{ t }}";
+        Svg.addSvg("backButton", Svg.backFolder)
     </script>
 </body>
 </html>

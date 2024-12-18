@@ -1,15 +1,12 @@
 import os
 import shutil
 import traceback
-from lib2to3.fixes.fix_input import context
-from zoneinfo import reset_tzpath
 
 from asgiref.sync import sync_to_async
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import login, authenticate, logout
 from django.core.files.base import ContentFile
 from django.utils import translation
-from django.shortcuts import redirect
 from . import consumers, views_sync
 from .consumers import get_path
 from .models import Folder, File
@@ -19,7 +16,6 @@ from django.core.files.storage import FileSystemStorage
 from django.http import FileResponse, Http404
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.contrib.auth import views as auth_views
 from .forms import CustomUserCreationForm, CustomLoginForm
 from .translations import get_translations
 from .views_sync import get_user_id, get_folder, create_folder_sync, create_file_sync, create_folder_bd, create_file_bd, \
@@ -58,15 +54,11 @@ async def upload_file(request):
 
         try:
             folder = await get_folder(folder_id, request.user)
-
             folder_url = await get_path(folder_id)
-
             new_file = await create_file_bd(file_name, request.user, folder, creation_date)
             file_name = new_file.name
-
             file_url = os.path.join(folder_url, file_name)
             await create_file_sync(file_url, file_blob)
-
 
             user_id = await get_user_id(request)
             await consumers.update_all_session_in_folder(folder_id, user_id)
@@ -90,7 +82,7 @@ async def upload_file(request):
 async def download_file(request, file_id):
     try:
         user_id = await get_user_id(request)
-        print(f"User: ", user_id, " try to download file: ", file_id)
+        #print(f"User: ", user_id, " try to download file: ", file_id)
         @sync_to_async
         def get_file(file_id):
             return File.objects.get(id=file_id)
@@ -106,7 +98,7 @@ async def download_file(request, file_id):
         file_path = file_path + "\\" + file.name
         response = FileResponse(open(file_path, 'rb'))
         response['Content-Disposition'] = f'attachment; filename="{file.name}"'
-        print(f"User: ", user_id, " successful download file: ", file_id)
+        #print(f"User: ", user_id, " successful download file: ", file_id)
         return response
 
     except File.DoesNotExist:
@@ -114,7 +106,7 @@ async def download_file(request, file_id):
 async def open_file(request, file_id):
     try:
         user_id = await get_user_id(request)
-        print(f"User: ", user_id, " try to open file: ", file_id)
+        #print(f"User: ", user_id, " try to open file: ", file_id)
         file = await get_file(file_id)
         if file is None:
             print(f"User: ", request.user.id, " failed open file: ", file_id, " because file not found in DB")
@@ -127,7 +119,7 @@ async def open_file(request, file_id):
         file_path = file_path + "\\" + file.name
         response = FileResponse(open(file_path, 'rb'))
         response['Content-Disposition'] = f'attachment; filename="{file.name}"'
-        print(f"User: ", user_id, " successful open file: ", file_id)
+        #print(f"User: ", user_id, " successful open file: ", file_id)
         return response
 
     except File.DoesNotExist:
@@ -248,7 +240,7 @@ async def create_file(request):
             fs = FileSystemStorage()
             folder_url = await consumers.get_path(folder_id)
             folder_url = os.path.join(folder_url, file_name)
-            print("File try to save to: ", folder_url)
+            #print("File try to save to: ", folder_url)
             content_file = ContentFile(file_content, name=file_name)
             fs.save(folder_url, content_file)
             user_id = await get_user_id(request)
@@ -273,9 +265,8 @@ def get_folder_contents(request):
             if not folder:
                 return JsonResponse({"error": "Folder not found."}, status=404)
         else:
-            folder = None  # Корневая папка
+            folder = None
 
-        # Получаем содержимое папки
         folders = Folder.objects.filter(parent=folder, user=request.user).values("id", "name", "is_public")
         files = File.objects.filter(folder=folder, user=request.user).values("id", "name", "is_public")
 
@@ -302,7 +293,7 @@ async def rename_file(request, file_id):
                 parent_directory = os.path.dirname(file_path)
                 new_file_path = os.path.join(parent_directory, new_name)
                 os.rename(file_path, new_file_path)
-                print("Rename file path: ", file_path, " to ", new_file_path)
+                #print("Rename file path: ", file_path, " to ", new_file_path)
 
 
             user_id = await get_user_id(request)
@@ -328,7 +319,7 @@ async def rename_folder(request, folder_id):
                 parent_directory = os.path.dirname(folder_path)
                 new_folder_path = os.path.join(parent_directory, new_name)
                 os.rename(folder_path, new_folder_path)
-                print("Rename folder path: ", folder_path, " to ", new_folder_path)
+                #print("Rename folder path: ", folder_path, " to ", new_folder_path)
 
             user_id = await get_user_id(request)
             await consumers.update_all_session_in_folder(folder_instance.parent_id, user_id)
@@ -366,7 +357,7 @@ async def toggle_folder_access(request, folder_id):
 
     return JsonResponse({'success': False}, status=400)
 async def set_folder_public_async(folder_id, public=True):
-    print(f"set_folder_public_async> Start in folder_id: {folder_id}")
+    #print(f"set_folder_public_async> Start in folder_id: {folder_id}")
     folder_instance = await get_folder_or_404_sync(folder_id)
 
     async def public_recursive(folder, public=True):
@@ -381,7 +372,7 @@ async def set_folder_public_async(folder_id, public=True):
         await consumers.update_all_session_in_folder(folder.id)
     await public_recursive(folder_instance, public)
     if(public==True):
-        print(f"set_folder_public_async> Try to find parent of folder: {folder_id}")
+        #print(f"set_folder_public_async> Try to find parent of folder: {folder_id}")
         await public_recursive_parent(folder_instance, prev_set_true = True)
 async def public_recursive_parent(folder, prev_set_true = False):
     if(folder == None):
@@ -389,17 +380,17 @@ async def public_recursive_parent(folder, prev_set_true = False):
     set_true = False
     folder_parent = await get_parent_folder(folder)
     if(folder_parent==None):
-        print(f"public_recursive_parent>Parent folder of: {folder.id} is None")
+        #print(f"public_recursive_parent>Parent folder of: {folder.id} is None")
         return
     if(prev_set_true == True):
         await consumers.update_all_session_in_folder(folder_parent.id)
-    print(f"public_recursive_parent>Find parent folder of {folder.id}. Parent is {folder_parent.id}")
+    #print(f"public_recursive_parent>Find parent folder of {folder.id}. Parent is {folder_parent.id}")
     if(not folder_parent.is_public):
-        print(f"public_recursive_parent>Set public to true for folder: {folder_parent.id}")
+        #print(f"public_recursive_parent>Set public to true for folder: {folder_parent.id}")
         await set_folder_public(folder_parent, True)
         set_true = True
-    else:
-        print(f"public_recursive_parent>Parent folder with id: {folder_parent.id} already public")
+    #else:
+        #print(f"public_recursive_parent>Parent folder with id: {folder_parent.id} already public")
     await public_recursive_parent(folder_parent, prev_set_true=set_true)
 @login_required
 async def delete_folder(request, folder_id):
@@ -410,7 +401,7 @@ async def delete_folder(request, folder_id):
                 return JsonResponse({'success': False}, status=404)
             folder_parent_id = folder_instance.parent_id
             folder_path = await consumers.get_path(folder_id)
-            print("Delete folder path: ", folder_path)
+            #print("Delete folder path: ", folder_path)
             if folder_path == None:
                 return JsonResponse({'success': False}, status=404)
             if(os.path.isdir(folder_path)):

@@ -90,6 +90,11 @@ namelabel{
     display: flex;
     justify-content: space-between;
 }
+.account-control{
+    display: flex;
+    gap: .5rem;
+    align-items: center
+}
 @media screen and (max-width: 768px){
     #controls {
     flex-direction: column !important;
@@ -111,5 +116,12 @@ namelabel{
     date-label{
         width: 5rem;
         text-align: end;
+    }
+    .account-control{
+        gap: .25rem;
+    }
+    .button-account{
+        font-size: 0;
+        min-width: 2rem;
     }
 }

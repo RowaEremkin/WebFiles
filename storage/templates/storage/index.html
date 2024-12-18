@@ -10,17 +10,17 @@
 <body>
     <div id="user-info" class="fixed-header">
         <h1 id="site-name">{{ t.site_name }}</h1>
-        <div style="display: flex; gap: 1rem; align-items: center ">
-            <button class="button button-secondary" onclick=choiceLanguage()>{{ lang }}</button>
+        <div class="account-control">
+            <button class="button button-secondary button-account" id="languageButton" onclick=choiceLanguage()>{{ lang }}</button>
             {% if request.user.is_authenticated %}
                 <span>{{ t.login_as}}: {{ request.user.username }}</span>
                 <form method="post" action="{% url 'logout' %}" style="display:inline;">
                     {% csrf_token %}
-                    <button class="button button-secondary" type="submit">{{ t.logout }}</button>
+                    <button class="button button-secondary button-account" id="logoutButton" type="submit">{{ t.logout }}</button>
                 </form>
             {% else %}
-                <button class="button button-secondary" onclick="location.href='{% url 'login' %}';">{{ t.login }}</button>
-                <button class="button button-secondary" onclick="location.href='{% url 'register' %}';">{{ t.registration }}</button>
+                <button class="button button-secondary button-account" id="loginButton" onclick="location.href='{% url 'login' %}';">{{ t.login }}</button>
+                <button class="button button-secondary button-account" id="registerButton" onclick="location.href='{% url 'register' %}';">{{ t.registration }}</button>
             {% endif %}
         </div>
 
@@ -43,13 +43,16 @@
             <div id="modalFileContent"></div>
         </div>
     </div>
-
+    <script src="{% static 'js/svg.js' %}"></script>
     <script>
         const userId = "{{ request.user.id }}";
         const currentLanguage = "{{ lang }}";
         const t = "{{ t }}";
+        Svg.addSvg("languageButton", Svg.language)
+        Svg.addSvg("logoutButton", Svg.logout)
+        Svg.addSvg("loginButton", Svg.login)
+        Svg.addSvg("registerButton", Svg.registration)
     </script>
-    <script src="{% static 'js/svg.js' %}"></script>
     <script src="{% static 'js/media_view.js' %}"></script>
     <script src="{% static 'js/index.js' %}"></script>
 </body>

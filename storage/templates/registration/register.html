@@ -13,14 +13,17 @@
         {% csrf_token %}
         {{ form.as_p }}
         <div class="horizontal-list">
-            <button class="button" onclick="location.href='{% url 'index' %}';">{{ t.back }}</button>
-            <button class="button" type="submit">{{ t.register }}</button>
+            <button class="button" id="backButton" onclick="location.href='{% url 'index' %}';">{{ t.back }}</button>
+            <button class="button" id="registerButton" type="submit">{{ t.register }}</button>
         </div>
     </form>
+    <script src="{% static 'js/account.js' %}"></script>
+    <script src="{% static 'js/svg.js' %}"></script>
     <script>
         const currentLanguage = "{{ lang }}";
         const t = "{{ t }}";
+        Svg.addSvg("backButton", Svg.backFolder)
+        Svg.addSvg("registerButton", Svg.registration)
     </script>
-    <script src="{% static 'js/account.js' %}"></script>
 </body>
 </html>

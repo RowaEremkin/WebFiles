@@ -5,7 +5,6 @@ from django.core.files.storage import FileSystemStorage
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
-from storage import consumers
 from storage.models import Folder, File
 
 

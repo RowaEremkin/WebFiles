@@ -29,7 +29,7 @@ active_sessions_folder = {}
 active_sessions_user = {}
 class FileManagerConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        print(f"Attempting to connect user: {self.scope['user'].username}")
+        #print(f"Attempting to connect user: {self.scope['user'].username}")
 
         session_id = self.scope['session'].session_key
 
@@ -41,7 +41,7 @@ class FileManagerConsumer(AsyncWebsocketConsumer):
         active_sessions_consumers[session_id] = self
         await self.send_path_question()
     async def disconnect(self, close_code):
-        print(f"Disconnecting user: {self.scope['user'].username}, close_code: {close_code}")
+        #print(f"Disconnecting user: {self.scope['user'].username}, close_code: {close_code}")
 
         session_id = self.scope['session'].session_key
         if session_id in active_sessions_folder:
@@ -53,20 +53,20 @@ class FileManagerConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_discard("WebFiles", self.channel_name)
         print(f"User {self.scope['user'].username} disconnected")
     async def receive(self, text_data):
-        print(f"Received data: {text_data}")
+        #print(f"Received data: {text_data}")
 
         data = json.loads(text_data)
         action = data.get("action")
 
         if action == "reload":
             folder_id = data.get("folder_id")
-            print(f"Received reload action from user {self.scope['user'].username} for folder {folder_id}")
+            #print(f"Received reload action from user {self.scope['user'].username} for folder {folder_id}")
             await self.send_tree(self.scope['user'].id, folder_id)
         if action == "upload":
             await self.handle_file_upload(data)
         elif action == "back":
             folder_id = data.get("folder_id")
-            print(f"Received back action from user {self.scope['user'].username} for folder {folder_id}")
+            #print(f"Received back action from user {self.scope['user'].username} for folder {folder_id}")
             folders = await sync_to_async(list)(
                 Folder.objects.filter(id=folder_id)
             )
@@ -78,7 +78,7 @@ class FileManagerConsumer(AsyncWebsocketConsumer):
         elif action == "answer_path":
             folder_path = data.get("tree_path")
             folder_id = await get_folder_id_from_path(folder_path)
-            print("Answer folder_id for user ", self.scope['user'].username, " is ", folder_id)
+            #print("Answer folder_id for user ", self.scope['user'].username, " is ", folder_id)
             await self.send_tree(self.scope['user'].id, folder_id)
     async def send_tree(self, user_id, folder_id=None):
         try:
@@ -86,10 +86,9 @@ class FileManagerConsumer(AsyncWebsocketConsumer):
             file_tree = await get_file_tree_for_user(user_id, folder_id)
             folder_access = await get_folder_access(user_id, folder_id)
             tree_path = await get_db_path(folder_id)
-            print(f"Sending file tree to {self.scope['user'].username} in folder {folder_id} with access: ", folder_access)
+            #print(f"Sending file tree to {self.scope['user'].username} in folder {folder_id} with access: ", folder_access)
             active_sessions_folder[session_id] = str(folder_id)
-            print(f"Set folder_id: {folder_id} for session_id {session_id}",
-                  folder_access)
+            #print(f"Set folder_id: {folder_id} for session_id {session_id}", folder_access)
             await self.send(text_data=json.dumps({
                 "action": "update",
                 "message": "reload",
@@ -102,7 +101,7 @@ class FileManagerConsumer(AsyncWebsocketConsumer):
             print(f"Error while fetching file tree for user {self.scope['user'].username}: {e}")
     async def send_path_question(self):
         try:
-            print(f"Send path question to user: {self.scope['user'].username}")
+            #print(f"Send path question to user: {self.scope['user'].username}")
             await self.send(text_data=json.dumps({
                 "action": "question_path",
                 "message": "path_question"
@@ -110,42 +109,37 @@ class FileManagerConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             print(f"Error while send question for user {self.scope['user'].username}: {e}")
     async def update_file_tree(self, event):
-        """
-        Обработчик события обновления дерева файлов.
-        """
-        print(f"Sending updated file tree to user {self.scope['user'].username}")
+        #print(f"Sending updated file tree to user {self.scope['user'].username}")
 
         tree_data = event["tree"]
-        parent_folder_id = event.get("parent_folder_id")  # Получаем идентификатор родительской папки
+        parent_folder_id = event.get("parent_folder_id")
 
         await self.send(text_data=json.dumps({
             "action": "update",
             "tree": tree_data,
-            "parentFolderId": parent_folder_id  # Отправляем идентификатор родительской папки
+            "parentFolderId": parent_folder_id
         }))
 
-        print(f"File tree sent to user {self.scope['user'].username}")
+        #print(f"File tree sent to user {self.scope['user'].username}")
     async def handle_file_upload(self, data):
         folder_id = None
         try:
-
-            # Извлекаем данные из сообщения
             folder_id = data.get('folder_id')
             file_name = data.get('file_name')
-            print("file_name: ", file_name)
-            file_blob = data.get('file_blob')  # Здесь нужно будет обработать Blob-данные
+            #print("file_name: ", file_name)
+            file_blob = data.get('file_blob')
 
             folder = await database_sync_to_async(lambda: Folder.objects.filter(id=folder_id, user=self.scope['user'].id).first())() if folder_id else None
 
             content_file = ContentFile(file_blob.encode('utf-8'), name=file_name)
-            # Сохраняем файл в файловую систему
+
             fs = FileSystemStorage()
             folder_url = await get_path(folder_id)
             folder_url = os.path.join(folder_url, file_name)
             filename = fs.save(folder_url, content_file)
             file_url = folder_url
-            print("File_url: ", file_url)
-            print("Folder: ", folder)
+            #print("File_url: ", file_url)
+            #print("Folder: ", folder)
 
             await database_sync_to_async(File.objects.create)(
                 name=file_name,
@@ -153,7 +147,6 @@ class FileManagerConsumer(AsyncWebsocketConsumer):
                 user=self.scope['user']
             )
 
-            # После успешной загрузки отправляем ответ обратно клиенту
             await self.send(text_data=json.dumps({
                 "action": "upload_success",
                 "message": "File uploaded successfully!",
@@ -173,7 +166,7 @@ async def get_path(folder_id):
     path_list = await get_db_path(folder_id)
     folder_path = FileSystemStorage().location
     folder_path = folder_path + path_list
-    print("FolderPath: ", folder_path)
+    #print("FolderPath: ", folder_path)
     if folder_path == FileSystemStorage().location:
         return None
     if folder_path == os.path.join(FileSystemStorage().location, ""):
@@ -206,7 +199,7 @@ async def get_db_path(folder_id):
     for path in path_list:
         folder_path = folder_path + "\\"  + path
 
-    print("FolderDBPath: ", folder_path)
+    #print("FolderDBPath: ", folder_path)
     return folder_path
 async def get_folder_id_from_path(folder_path):
     if folder_path==None:
@@ -228,24 +221,24 @@ async def get_folder_id_from_path(folder_path):
 
         current_folder_id = folder.id
 
-    print(f"Folder ID for path '{folder_path}': {current_folder_id}")
+    #print(f"Folder ID for path '{folder_path}': {current_folder_id}")
     return current_folder_id
 async def update_all_session_in_folder(folder_id, current_user_id=None):
-    print("update_all_session_in_folder> Start update all session in folder: ", folder_id, " from user: ", current_user_id)
+    #print("update_all_session_in_folder> Start update all session in folder: ", folder_id, " from user: ", current_user_id)
     #print("update_all_session_in_folder> active_sessions_consumers: ", active_sessions_consumers)
-    print("update_all_session_in_folder> active_sessions_folder: ", active_sessions_folder)
+    #print("update_all_session_in_folder> active_sessions_folder: ", active_sessions_folder)
     #print("update_all_session_in_folder> active_sessions_user: ", active_sessions_user)
     for session_id, session_folder_id in active_sessions_folder.items():
         if session_folder_id == str(folder_id):
             user_id = active_sessions_user.get(session_id)
             if user_id is not None and (user_id != current_user_id or current_user_id ==None):
                 consumer_instance = active_sessions_consumers[session_id]
-                print("update_all_session_in_folder> Updated tree for session_id: ", session_id, " from user: ", current_user_id)
+                #print("update_all_session_in_folder> Updated tree for session_id: ", session_id, " from user: ", current_user_id)
                 await consumer_instance.send_tree(user_id, folder_id)
-            else:
-                print("update_all_session_in_folder> Not update tree for session_id: ", session_id, " from user: ", current_user_id, "and user_id: ", user_id)
-        else:
-                print("update_all_session_in_folder> session_folder_id: ", session_folder_id, " != folder_id: ", str(folder_id))
+            #else:
+                #print("update_all_session_in_folder> Not update tree for session_id: ", session_id, " from user: ", current_user_id, "and user_id: ", user_id)
+        #else:
+            #print("update_all_session_in_folder> session_folder_id: ", session_folder_id, " != folder_id: ", str(folder_id))
 
 @sync_to_async
 def get_folder_access(user_id, folder_id):
@@ -265,7 +258,6 @@ def get_folder_access(user_id, folder_id):
         return False
 async def get_file_tree_for_user(user_id, folder_id=None):
     try:
-
         tree = []
         if folder_id is None:
             # Получаем корневые папки
