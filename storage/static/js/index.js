@@ -766,6 +766,7 @@ document.addEventListener("DOMContentLoaded", function() {
     //fileInput.style.display = 'none';
     fileInput.multiple = true;
     fileInput.onchange = handleFileInputChange;
+    fileInput.insertAdjacentHTML('afterbegin', Svg.exploreFolder);
 
     controls.appendChild(fileInput)
 

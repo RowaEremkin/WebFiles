@@ -101,11 +101,11 @@ namelabel{
 }
     body {
         padding-top: 2rem;
-        padding-right: .5rem;
-        padding-left: .5rem;
+        padding-right: .25rem;
+        padding-left: .25rem;
     }
     .item {
-        padding: 0;
+        padding-left: .25rem;
     }
     .auth-form {
         width: 95%;
