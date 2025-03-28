@@ -131,6 +131,14 @@ dicti = {
         "en": "Failed to rename file",
         "ru": "Ошибка при переименовании файла"
     },
+    "search":{
+        "en": "Search",
+        "ru": "Поиск"
+    },
+    "search_placeholder":{
+        "en": "Find...",
+        "ru": "Поиск..."
+    },
 
 
 }

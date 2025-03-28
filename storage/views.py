@@ -200,7 +200,10 @@ async def create_folder(request):
             new_folder = await create_folder_bd(folder_name, request.user, parent_folder)
             folder_name = new_folder.name
             folder_path = await consumers.get_path(parent_id)
-            folder_path = os.path.join(folder_path, folder_name)
+            if folder_path != None:
+                folder_path = os.path.join(folder_path, folder_name)
+            else:
+                folder_path = folder_name
             #print("FolderPath: ", folder_path)
             await create_folder_sync(folder_path)
 

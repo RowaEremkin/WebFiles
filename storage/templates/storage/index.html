@@ -11,9 +11,11 @@
     <div id="user-info" class="fixed-header">
         <h1 id="site-name">{{ t.site_name }}</h1>
         <div class="account-control">
+            <input class="input input-secondary" id="searchInput" placeholder="{{ t.search_placeholder }}">
             <button class="button button-secondary button-account" id="languageButton" onclick=choiceLanguage()>{{ lang }}</button>
+            <label for="languageButton"></label>
             {% if request.user.is_authenticated %}
-                <span>{{ t.login_as}}: {{ request.user.username }}</span>
+            <span>{{ t.login_as}}: {{ request.user.username }}</span>
                 <form method="post" action="{% url 'logout' %}" style="display:inline;">
                     {% csrf_token %}
                     <button class="button button-secondary button-account" id="logoutButton" type="submit">{{ t.logout }}</button>

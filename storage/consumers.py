@@ -60,8 +60,12 @@ class FileManagerConsumer(AsyncWebsocketConsumer):
 
         if action == "reload":
             folder_id = data.get("folder_id")
-            #print(f"Received reload action from user {self.scope['user'].username} for folder {folder_id}")
-            await self.send_tree(self.scope['user'].id, folder_id)
+            name_search = data.get("name_search")
+            # print(f"Received reload action from user {self.scope['user'].username} for folder {folder_id}")
+            await self.send_tree(self.scope['user'].id, folder_id=folder_id, name_search=name_search)
+
+
+
         if action == "upload":
             await self.handle_file_upload(data)
         elif action == "back":
@@ -80,15 +84,23 @@ class FileManagerConsumer(AsyncWebsocketConsumer):
             folder_id = await get_folder_id_from_path(folder_path)
             #print("Answer folder_id for user ", self.scope['user'].username, " is ", folder_id)
             await self.send_tree(self.scope['user'].id, folder_id)
-    async def send_tree(self, user_id, folder_id=None):
+    async def send_tree(self, user_id, folder_id=None, name_search=None):
         try:
             session_id = self.scope['session'].session_key
-            file_tree = await get_file_tree_for_user(user_id, folder_id)
             folder_access = await get_folder_access(user_id, folder_id)
             tree_path = await get_db_path(folder_id)
             #print(f"Sending file tree to {self.scope['user'].username} in folder {folder_id} with access: ", folder_access)
             active_sessions_folder[session_id] = str(folder_id)
             #print(f"Set folder_id: {folder_id} for session_id {session_id}", folder_access)
+
+            if(name_search == None or name_search == ""):
+                file_tree = await get_file_tree_for_user(user_id, folder_id)
+            else:
+                file_tree = await get_tree_for_user(
+                    user_id=user_id,
+                    folder_id=folder_id,
+                    name_search=name_search)
+
             await self.send(text_data=json.dumps({
                 "action": "update",
                 "message": "reload",
@@ -256,11 +268,30 @@ def get_folder_access(user_id, folder_id):
     except Exception as e:
         traceback.print_exc()
         return False
+def addFolder(folder_instance, user_id = None):
+    folder = {
+        "id": folder_instance.id,
+        "name": folder_instance.name,
+        "type": "folder",
+        "is_public": folder_instance.is_public,
+        "edit_access": folder_instance.user_id == user_id,
+        "creation_date": folder_instance.creation_date
+    }
+    return folder
+def addFile(file_instance, user_id = None):
+    file = {
+        "id": file_instance.id,
+        "name": file_instance.name,
+        "type": "file",
+        "is_public": file_instance.is_public,
+        "edit_access": file_instance.user_id == user_id,
+        "creation_date": file_instance.creation_date
+    }
+    return file
 async def get_file_tree_for_user(user_id, folder_id=None):
     try:
         tree = []
         if folder_id is None:
-            # Получаем корневые папки
             root_folders = await sync_to_async(list)(
                 Folder.objects.filter(Q(user_id=user_id) | Q(is_public=True), parent=None)
             )
@@ -268,14 +299,7 @@ async def get_file_tree_for_user(user_id, folder_id=None):
             for folder in root_folders:
                 if folder.user_id == user_id:
                     user_root = True
-                tree.append({
-                    "id": folder.id,
-                    "name": folder.name,
-                    "type": "folder",
-                    "is_public": folder.is_public,
-                    "edit_access": folder.user_id == user_id,
-                    "creation_date": folder.creation_date
-                })
+                tree.append(addFolder(folder_instance=folder, user_id=user_id))
             if user_root==False:
                 @sync_to_async
                 def GetUser(user_id):
@@ -288,40 +312,19 @@ async def get_file_tree_for_user(user_id, folder_id=None):
                 if(user!=None):
                     folder = await storage.views_sync.create_folder_bd(user.username, user, None)
                     await storage.views_sync.create_folder_sync(FileSystemStorage().location + "\\" + user.username)
-                    tree.append({
-                        "id": folder.id,
-                        "name": folder.name,
-                        "type": "folder",
-                        "is_public": folder.is_public,
-                        "edit_access": folder.user_id == user_id,
-                        "creation_date": folder.creation_date
-                    })
+
+                    tree.append(addFolder(folder_instance=folder, user_id=user_id))
         else:
-            # Получаем содержимое указанной папки
             folders = await sync_to_async(list)(
                 Folder.objects.filter(Q(user_id=user_id) | Q(is_public=True), parent=folder_id)
             )
             for folder in folders:
-                tree.append({
-                    "id": folder.id,
-                    "name": folder.name,
-                    "type": "folder",
-                    "is_public": folder.is_public,
-                    "edit_access": folder.user_id == user_id,
-                    "creation_date": folder.creation_date
-                })
+                tree.append(addFolder(folder_instance=folder, user_id=user_id))
             files = await sync_to_async(list)(
                 File.objects.filter(Q(user=user_id) | Q(is_public=True), folder=folder_id)
             )
             for file in files:
-                tree.append({
-                    "id": file.id,
-                    "name": file.name,
-                    "type": "file",
-                    "is_public": file.is_public,
-                    "edit_access": file.user_id == user_id,
-                    "creation_date": file.creation_date
-                })
+                tree.append(addFile(file_instance=file, user_id=user_id))
 
         return tree
 
@@ -329,4 +332,43 @@ async def get_file_tree_for_user(user_id, folder_id=None):
         traceback.print_exc()
         print(f"Error fetching file tree for user_id {user_id}: {e}")
         raise
+async def get_tree_for_user(user_id, folder_id=None, name_search=None):
+    tree = []
+    print("Start seacrh in folder: ", folder_id, " name_search: ", name_search)
+    results = await search_in_folders(folder_id, name_search, user_id=user_id)
+    for folder in results['folders']:
+        tree.append(addFolder(folder_instance=folder, user_id=user_id))
+    for file in results['files']:
+        tree.append(addFile(file_instance=file, user_id=user_id))
+    print("search tree: ", tree)
+    return tree
+async def search_in_folders(folder_id, search_query, user_id=None):
+    @sync_to_async
+    def get_folders(parent_id, name_search = None, user_id = None):
+        if(name_search == None):
+            return list(Folder.objects.filter(Q(user_id=user_id) | Q(is_public=True), parent_id=parent_id))
+        else:
+            return list(Folder.objects.filter(Q(user_id=user_id) | Q(is_public=True), parent_id=parent_id, name__icontains=name_search))
+    @sync_to_async
+    def get_files(folder_id, name_search, user_id=None):
+        return list(File.objects.filter(Q(user_id=user_id) | Q(is_public=True), folder_id=folder_id, name__icontains=name_search))
+    try:
+        check_folders = await get_folders(folder_id, user_id=user_id)
+        folders = await get_folders(folder_id, search_query, user_id=user_id)
+        files = await get_files(folder_id, search_query, user_id=user_id)
 
+        results = {
+            'folders': list(folders),
+            'files': list(files)
+        }
+
+        # Рекурсивно ищем в каждой вложенной папке
+        for folder in check_folders:
+            nested_results = await search_in_folders(folder.id, search_query, user_id=user_id)
+            results['folders'].extend(nested_results['folders'])
+            results['files'].extend(nested_results['files'])
+
+        return results
+    except Exception as e:
+        traceback.print_exc()
+        print(f"Error searching for folder {folder_id}: {e}")

@@ -83,6 +83,11 @@ function updateFolderTree(treeData, parentFolderId = null) {
             current_path.appendChild(link)
         }
     })
+    const searchInput = document.getElementById("searchInput")
+    if(searchInput.value !== ""){
+            link = createPathLink(null, "?=" +searchInput.value)
+            current_path.appendChild(link)
+    }
     const folderTree = document.getElementById("folder-tree");
     folderTree.innerHTML = "";
     if (parentFolderId !== null) {
@@ -696,9 +701,13 @@ function backFolder(folderId) {
     const messageObject = { action: "back", folder_id: folderId };
     socket.send(JSON.stringify(messageObject));
 }
-function openFolder(folderId) {
+function openFolder(folderId, nameSearch = null) {
     //console.log("Open Folder: ", folderId)
-    const messageObject = { action: "reload", folder_id: folderId };
+    const messageObject = {
+        action: "reload",
+        folder_id: folderId,
+        name_search: nameSearch
+    };
     socket.send(JSON.stringify(messageObject));
 }
 function updateFolder() {
@@ -737,8 +746,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const jsonString = t.replace(/&#x27;/g, "\"");
     try {
         tr = JSON.parse(jsonString);
-    }
-    catch(e){
+    } catch (e) {
         console.error(e)
     }
     const createFolderButton = document.createElement("button");
@@ -795,6 +803,12 @@ document.addEventListener("DOMContentLoaded", function() {
     uploadButton.insertAdjacentHTML('afterbegin', Svg.upload);
 
     controls.appendChild(uploadButton)
+
+    document.getElementById('searchInput').addEventListener('input', function () {
+        const searchQuery = this.value;
+
+        openFolder(folderId=current_folder_id,nameSearch=searchQuery);
+    });
 });
 const siteName = document.getElementById('site-name');
 siteName.insertAdjacentHTML('afterbegin', Svg.folderRoot);
