@@ -1,0 +1,54 @@
+@startuml
+
+rectangle "Файловый менеджер" {
+  rectangle " " as PublicFunctions {
+  left to right direction
+      usecase "Просмотр публичных\nфайлов и папок" as UC_ViewPublic
+      usecase "Регистрация" as UC_Register
+      usecase "Вход в систему" as UC_Login
+  }
+  rectangle " " as UserFunctions {
+  left to right direction
+      usecase "Просмотр личных\nфайлов и папок" as UC_ViewPrivate
+      usecase "Создание папки" as UC_CreateFolder
+      usecase "Загрузка файла" as UC_UploadFile
+      usecase "Переименование\nфайлов и папок" as UC_Rename
+      usecase "Удаление\nфайлов и папок" as UC_Delete
+      usecase "Совместное использование\nфайлов/папок" as UC_Share
+      usecase "Получение обновлений\nв реальном времени" as UC_RealTimeUpdates
+  }
+  rectangle " " as AdminFunctions {
+  left to right direction
+      usecase "Управление пользователями" as UC_ManageUsers
+      usecase "Просмотр всех\nфайлов и папок" as UC_ViewAll
+      usecase "Удаление любых\nфайлов и папок" as UC_AdminDelete
+      usecase "Настройка системы" as UC_SystemSettings
+  }
+  PublicFunctions -[hidden]-> UserFunctions
+  UserFunctions -[hidden]-> AdminFunctions
+
+}
+actor "Неавторизованный\nпользователь" as Guest
+actor "Авторизованный\nпользователь" as User
+actor "Администратор" as Admin
+Guest --|> User
+User --|> Admin
+
+Guest -left-> UC_ViewPublic
+Guest -left-> UC_Register
+Guest -left-> UC_Login
+
+User -left-> UC_ViewPrivate
+User -left-> UC_CreateFolder
+User -left-> UC_UploadFile
+User -left-> UC_Rename
+User -left-> UC_Delete
+User -left-> UC_Share
+User -left-> UC_RealTimeUpdates
+
+Admin -left-> UC_ManageUsers
+Admin -left-> UC_ViewAll
+Admin -left-> UC_AdminDelete
+Admin -left-> UC_SystemSettings
+
+@enduml

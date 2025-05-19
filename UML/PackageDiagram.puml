@@ -1,0 +1,76 @@
+@startuml
+title Package Diagram зависимостей проекта
+
+package "Django и REST" as pkg_django {
+  [Django==5.1.3] as django
+  [djangorestframework==3.15.2] as drf
+  [sqlparse==0.5.1] as sqlparse
+  [translation==1.0.5] as translation
+}
+
+package "Асинхронность и Channels" as pkg_channels {
+  [asgiref==3.8.1] as asgiref
+  [channels==4.1.0] as channels
+  [channels-redis==4.2.0] as channels_redis
+  [daphne==4.1.2] as daphne
+}
+
+package "Сеть и HTTP" as pkg_network {
+  [requests==2.32.3] as requests
+  [urllib3==2.2.3] as urllib3
+  [certifi==2024.12.14] as certifi
+  [charset-normalizer==3.4.0] as charset_normalizer
+  [idna==3.10] as idna
+}
+
+package "Безопасность и криптография" as pkg_security {
+  [cryptography==43.0.3] as cryptography
+  [pyOpenSSL==24.2.1] as pyopenssl
+  [cffi==1.17.1] as cffi
+  [pycparser==2.22] as pycparser
+  [pyasn1==0.6.1] as pyasn1
+  [pyasn1_modules==0.4.1] as pyasn1_modules
+  [service-identity==24.2.0] as service_identity
+}
+
+package "Twisted и WebSocket" as pkg_twisted {
+  [Twisted==24.10.0] as twisted
+  [autobahn==24.4.2] as autobahn
+  [txaio==23.1.1] as txaio
+  [Automat==24.8.1] as automat
+  [constantly==23.10.4] as constantly
+  [incremental==24.7.2] as incremental
+  [zope.interface==7.1.1] as zope_interface
+  [hyperlink==21.0.0] as hyperlink
+  [msgpack==1.1.0] as msgpack
+}
+
+package "База данных" as pkg_db {
+  [mysqlclient==2.2.5] as mysqlclient
+  [redis==5.2.0] as redis
+}
+
+package "Утилиты" as pkg_utils {
+  [attrs==24.2.0] as attrs
+  [typing_extensions==4.12.2] as typing_ext
+  [tzdata==2024.2] as tzdata
+}
+
+' Зависимости между пакетами
+
+django --> asgiref : async support
+channels --> asgiref
+channels_redis --> redis
+daphne --> twisted
+autobahn --> twisted
+autobahn --> txaio
+pyopenssl --> cryptography
+service_identity --> pyopenssl
+requests --> urllib3
+requests --> certifi
+requests --> charset_normalizer
+requests --> idna
+mysqlclient ..> django : DB driver
+redis ..> channels_redis : Redis client
+
+@enduml

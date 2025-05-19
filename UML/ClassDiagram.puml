@@ -1,0 +1,55 @@
+@startuml
+
+class User << (D,orchid) >> {
+  + id: int (PK)
+  + username: str
+  + email: str
+  + ...
+}
+
+class Folder << (D,lightblue) >> {
+  + id: UUID (PK)
+  + name: CharField(255)
+  + is_public: Boolean
+  + creation_date: DateTime
+
+  + save()
+  + __str__(): str
+}
+
+class File << (D,lightgreen) >> {
+  + id: UUID (PK)
+  + name: CharField(255)
+  + is_public: Boolean
+  + uploaded_at: DateTime
+
+  + save()
+  + __str__(): str
+}
+
+User "1" -- "*" Folder : Создает
+User "1" -- "*" File : Загружает
+
+Folder "0..1" -- "*" Folder : Иерархия папок
+Folder "1" -- "*" File : Содержит файлы
+
+note top of Folder
+  Ограничение unique_folder_name_per_parent:
+  Уникальное сочетание имени и родительской папки
+end note
+
+note top of File
+  Ограничение unique_file_name_per_folder:
+  Уникальное имя файла в пределах папки
+end note
+
+note right of Folder::save
+  Автоматически добавляет суффикс (n)
+  при дублировании имени в одной папке
+end note
+
+note right of File::save
+  Сохраняет расширение файла при переименовании
+  Пример: document(1).pdf
+end note
+@enduml

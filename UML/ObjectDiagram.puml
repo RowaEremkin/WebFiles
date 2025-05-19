@@ -1,0 +1,78 @@
+@startuml
+' Объекты пользователей
+object user1 <<User>> {
+  id = 1
+  username = "mrowa"
+  email = "mrowa@example.com"
+}
+
+object user2 <<User>> {
+  id = 2
+  username = "friend"
+  email = "friend@example.com"
+}
+
+' Объекты папок
+object folder_root <<Folder>> {
+  id = "uuid-root"
+  name = "Root"
+  is_public = false
+  creation_date = "2025-04-01 10:00"
+}
+
+object folder_docs <<Folder>> {
+  id = "uuid-docs"
+  name = "Documents"
+  is_public = false
+  creation_date = "2025-04-02 12:00"
+}
+
+object folder_public <<Folder>> {
+  id = "uuid-public"
+  name = "Public"
+  is_public = true
+  creation_date = "2025-04-02 15:00"
+}
+
+' Объекты файлов
+object file_report <<File>> {
+  id = "uuid-report"
+  name = "report.pdf"
+  is_public = false
+  uploaded_at = "2025-04-03 09:30"
+}
+
+object file_photo <<File>> {
+  id = "uuid-photo"
+  name = "vacation(1).jpg"
+  is_public = true
+  uploaded_at = "2025-04-03 10:00"
+}
+
+object file_notes <<File>> {
+  id = "uuid-notes"
+  name = "notes.txt"
+  is_public = false
+  uploaded_at = "2025-04-04 11:00"
+}
+
+' Связи: кто создал папки
+user1 --> folder_root : создает
+user1 --> folder_docs : создает
+user2 --> folder_public : создает
+
+' Иерархия папок
+folder_root --> folder_docs : содержит
+folder_root --> folder_public : содержит
+
+' Связи: папки содержат файлы
+folder_docs --> file_report : содержит
+folder_public --> file_photo : содержит
+folder_docs --> file_notes : содержит
+
+' Пользователи загружают файлы
+user1 --> file_report : загружает
+user2 --> file_photo : загружает
+user1 --> file_notes : загружает
+
+@enduml

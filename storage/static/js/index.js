@@ -1,4 +1,3 @@
-// WebSocket для обновления структуры в реальном времени
 const socket = new WebSocket('ws://' + window.location.hostname + ':8000/ws/file_manager/');
 
 let current_folder_id
@@ -7,10 +6,6 @@ let folderPath = ""
 let tr = null;
 socket.onmessage = function(event) {
     const response = JSON.parse(event.data);
-    //console.log("OnMessage response: ", response)
-    //console.log("parentFolderId: ", response.parentFolderId)
-    //console.log("folderAccess: ", response.folderAccess)
-    //console.log("tree_path: ", response.treePath)
     folderPath = transformPath(response.treePath)
     if (response.action === "update") {
         current_folder_id = response.parentFolderId
@@ -25,7 +20,6 @@ socket.onmessage = function(event) {
         document.getElementById('controls').style.display = folder_access===false?'none':"flex";
     }
     else if (response.action === "upload_success") {
-        //console.log("Upload successful:", response.data, " parentFolderId: ", response.parentFolderId);
         socket.send(JSON.stringify({ action: "reload", folder_id: response.parentFolderId }));
     }
     else if (response.action === "upload_error") {
@@ -33,13 +27,11 @@ socket.onmessage = function(event) {
     }
     else if (response.action === "question_path"){
         let tree_path = window.location.pathname
-        //console.log("Send answer_path: ", tree_path)
         goToPath(tree_path);
     }
     history.pushState(null, '', folderPath);
 };
 function updateFolderTree(treeData, parentFolderId = null) {
-    //console.log("UpdateFolderTree: ", parentFolderId)
     function createPathLink(path, text){
         const link = document.createElement('a');
         link.textContent = text;
@@ -96,16 +88,15 @@ function updateFolderTree(treeData, parentFolderId = null) {
         backButton.insertAdjacentText('beforeend', "...");
         backButton.classList.add("item");
         backButton.classList.add("back-button");
-        backButton.onclick = () => backFolder(parentFolderId); // Функция для загрузки родительской папки
+        backButton.onclick = () => backFolder(parentFolderId);
         folderTree.appendChild(backButton);
     }
     function createFolderList(items, parentElement) {
-        //console.log("CreateFolderList");
         items.forEach(item => {
             const li = document.createElement("button");
             li.classList.add("item");
-            li.style.display = "flex"; // Используем flexbox для размещения элементов
-            li.style.justifyContent = "space-between"; // Размещаем элементы по краям
+            li.style.display = "flex";
+            li.style.justifyContent = "space-between";
 
             const icon = document.createElement("div");
             icon.id = "icon-" + item.id;
@@ -158,7 +149,7 @@ function updateFolderTree(treeData, parentFolderId = null) {
                     deleteButton.insertAdjacentHTML('afterbegin', Svg.folderDelete);
                     deleteButton.onclick = (event) => {
                         event.stopPropagation();
-                        deleteFolder(item.id); // Загружаем папку по клику
+                        deleteFolder(item.id);
                     };
 
                     controlPanel.appendChild(deleteButton);
@@ -228,7 +219,7 @@ function getCsrfToken(){
     return getFromDocument("csrfmiddlewaretoken")
 }
 function getFromDocument(path) {
-    const csrfToken = document.querySelector(`input[name=${path}]`)?.value; // Если токен есть на странице
+    const csrfToken = document.querySelector(`input[name=${path}]`)?.value;
     if (csrfToken) {
         return csrfToken;
     }
@@ -373,7 +364,6 @@ function downloadFile(fileId) {
         }
         const contentDisposition = response.headers.get('Content-Disposition');
         let filename = 'downloaded_file';
-        //console.log("contentDisposition: ", contentDisposition)
         filename = decodeMimeString(contentDisposition)
         if (filename && filename.includes('attachment')) {
             const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
@@ -383,7 +373,6 @@ function downloadFile(fileId) {
                 filename = matches[1].replace(/['"]/g, '');
             }
         }
-        //console.log("filename: ", filename)
 
         return response.blob().then(blob => ({ blob, filename }));
     })
@@ -464,7 +453,7 @@ function renameFile(fileId) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRFToken': csrfToken // Получите CSRF-токен из cookie
+                'X-CSRFToken': csrfToken
             },
             body: new URLSearchParams({
                 'new_name': newName
@@ -486,7 +475,6 @@ function renameFile(fileId) {
 function toggleFileAccess(fileId) {
     const csrfToken = getCsrfToken();
     let elementId = 'access-file-toggle-'+fileId;
-    //console.log("elementId: ", fileId)
     let accessToggle = document.getElementById(elementId)
     let iconId = 'icon-'+fileId;
     let icon = document.getElementById(iconId)
@@ -494,13 +482,12 @@ function toggleFileAccess(fileId) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken // Получите CSRF-токен из cookie
+            'X-CSRFToken': csrfToken
         }
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            //console.log(`File access changed: ${data.is_public ? 'public' : 'private'}`);
             if(accessToggle !== null){
                 accessToggle.innerHTML = ('afterbegin', data.is_public?Svg.publicAccess:Svg.privateAccess)
             }
@@ -580,13 +567,12 @@ function toggleFolderAccess(folderId) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken // Получите CSRF-токен из cookie
+            'X-CSRFToken': csrfToken
         }
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            //console.log(`Folder ${folderId} access changed: ${data.is_public ? 'Public' : 'Private'}`);
             if(accessToggle !== null){
                 accessToggle.innerHTML = ('afterbegin', data.is_public?Svg.publicAccess:Svg.privateAccess)
             }
@@ -600,7 +586,7 @@ function toggleFolderAccess(folderId) {
     .catch(error => console.error('Error on change folder access with id ${folderId}:', error));
 }
 function deleteFolder(folderId) {
-    const csrfToken = getCsrfToken(); // Получите CSRF-токен из cookie
+    const csrfToken = getCsrfToken();
 
     if (confirm(tr.are_you_sure_you_want_to_delete_this_folder)) {
         fetch(`/delete_folder/${folderId}/`, {
@@ -638,7 +624,7 @@ function createFolder() {
             "Content-Type": "application/x-www-form-urlencoded",
             "X-CSRFToken": csrfToken,
         },
-        body: new URLSearchParams({ name: folderName }), // Передаём имя папки
+        body: new URLSearchParams({ name: folderName }),
     })
         .then(response => {
             if (!response.ok) {
@@ -650,7 +636,6 @@ function createFolder() {
             if (data.error) {
                 alert(`Error: ${data.error}`);
             } else {
-                //console.log('Folder with name ${folderName} created');
                 updateFolder()
             }
         })
@@ -667,7 +652,7 @@ function createFile() {
         return;
     }
 
-    const folderId = current_folder_id; // Текущая папка
+    const folderId = current_folder_id;
 
     const csrfToken = getCsrfToken();
 
@@ -697,12 +682,10 @@ function createFile() {
         });
 }
 function backFolder(folderId) {
-    //console.log("Back Folder: ", folderId)
     const messageObject = { action: "back", folder_id: folderId };
     socket.send(JSON.stringify(messageObject));
 }
 function openFolder(folderId, nameSearch = null) {
-    //console.log("Open Folder: ", folderId)
     const messageObject = {
         action: "reload",
         folder_id: folderId,
@@ -723,7 +706,6 @@ function setLanguage(lang) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            //console.log(`Set language to: ${data.lang}`);
             location.reload()
         } else {
             console.error('Error on set language');
@@ -739,7 +721,6 @@ function closeModalFile(){
 }
 function choiceLanguage(){
     let lang = currentLanguage
-    //console.log("Lang: ", lang)
     setLanguage(lang==='en'?'ru':'en')
 }
 document.addEventListener("DOMContentLoaded", function() {
@@ -754,14 +735,12 @@ document.addEventListener("DOMContentLoaded", function() {
     createFolderButton.textContent = tr?.create_folder;
     createFolderButton.insertAdjacentHTML('afterbegin', Svg.createFolder);
     createFolderButton.onclick = createFolder;
-    //createFolderButton.style.display = 'none';
 
     const createFileButton = document.createElement("button");
     createFileButton.classList.add('control-button')
     createFileButton.textContent = tr?.create_file;
     createFileButton.insertAdjacentHTML('afterbegin', Svg.createFile);
     createFileButton.onclick = createFile;
-    //createFileButton.style.display = 'none';
 
     const controls = document.getElementById("controls");
     controls.appendChild(createFolderButton);
@@ -771,7 +750,6 @@ document.addEventListener("DOMContentLoaded", function() {
     fileInput.className = 'control-button';
     fileInput.type = 'file';
     fileInput.id = 'file-input';
-    //fileInput.style.display = 'none';
     fileInput.multiple = true;
     fileInput.onchange = handleFileInputChange;
     fileInput.insertAdjacentHTML('afterbegin', Svg.exploreFolder);

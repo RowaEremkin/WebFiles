@@ -1,0 +1,37 @@
+@startuml
+
+package "Clients" as clients {
+  [Web Client] as client_web
+  [Android Client] as client_android
+}
+
+database "MySQL Database" as db {
+    [User Files] as db_files
+}
+node "Django Server" as server {
+  [Django Application] as server_app
+  [Django WebSocket] as server_websocket
+  [Files Module] as server_files
+  [Users Module] as server_users
+  interface "REST API" as server_rest
+  interface "HTTP/HTTPS" as server_http
+  server_app - server_rest
+  server_users - server_http
+  server_files --- db_files
+  server_files -- server_websocket : Отображение
+  server_files - server_app : Изменения
+}
+client_android --- server_rest
+client_android --- server_websocket
+client_android --- server_http
+client_web --- server_rest
+client_web --- server_websocket
+client_web --- server_http
+
+note top of server {
+  **Внутренние связи:**
+  - WebSocket для реального времени обновлений файлов
+  - REST API для общих запросов
+}
+
+@enduml

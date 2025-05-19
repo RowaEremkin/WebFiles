@@ -157,13 +157,17 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 messages.success(request, 'You have logged in successfully!')
+                print(f"User: ", user, " logged in successfully!")
                 return redirect('index')
             else:
                 messages.error(request, 'Invalid username or password.')
+                print(f"User: ", user, " Invalid username or password.")
         else:
             messages.error(request, 'There was an error with your login.')
+            print(f"Form login is not valid")
     else:
         form = CustomLoginForm(t=t)
+        print(f"CustomLoginForm")
 
     context = {
         'form': form,

@@ -29,7 +29,7 @@ active_sessions_folder = {}
 active_sessions_user = {}
 class FileManagerConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        #print(f"Attempting to connect user: {self.scope['user'].username}")
+        print(f"Attempting to connect user: {self.scope['user'].username}")
 
         session_id = self.scope['session'].session_key
 
@@ -41,7 +41,7 @@ class FileManagerConsumer(AsyncWebsocketConsumer):
         active_sessions_consumers[session_id] = self
         await self.send_path_question()
     async def disconnect(self, close_code):
-        #print(f"Disconnecting user: {self.scope['user'].username}, close_code: {close_code}")
+        print(f"Disconnecting user: {self.scope['user'].username}, close_code: {close_code}")
 
         session_id = self.scope['session'].session_key
         if session_id in active_sessions_folder:
@@ -53,7 +53,7 @@ class FileManagerConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_discard("WebFiles", self.channel_name)
         print(f"User {self.scope['user'].username} disconnected")
     async def receive(self, text_data):
-        #print(f"Received data: {text_data}")
+        print(f"Received data: {text_data}")
 
         data = json.loads(text_data)
         action = data.get("action")
@@ -61,7 +61,7 @@ class FileManagerConsumer(AsyncWebsocketConsumer):
         if action == "reload":
             folder_id = data.get("folder_id")
             name_search = data.get("name_search")
-            # print(f"Received reload action from user {self.scope['user'].username} for folder {folder_id}")
+            print(f"Received reload action from user {self.scope['user'].username} for folder {folder_id}")
             await self.send_tree(self.scope['user'].id, folder_id=folder_id, name_search=name_search)
 
 
@@ -70,7 +70,7 @@ class FileManagerConsumer(AsyncWebsocketConsumer):
             await self.handle_file_upload(data)
         elif action == "back":
             folder_id = data.get("folder_id")
-            #print(f"Received back action from user {self.scope['user'].username} for folder {folder_id}")
+            print(f"Received back action from user {self.scope['user'].username} for folder {folder_id}")
             folders = await sync_to_async(list)(
                 Folder.objects.filter(id=folder_id)
             )
@@ -82,7 +82,7 @@ class FileManagerConsumer(AsyncWebsocketConsumer):
         elif action == "answer_path":
             folder_path = data.get("tree_path")
             folder_id = await get_folder_id_from_path(folder_path)
-            #print("Answer folder_id for user ", self.scope['user'].username, " is ", folder_id)
+            print("Answer folder_id for user ", self.scope['user'].username, " is ", folder_id)
             await self.send_tree(self.scope['user'].id, folder_id)
     async def send_tree(self, user_id, folder_id=None, name_search=None):
         try:

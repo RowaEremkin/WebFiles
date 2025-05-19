@@ -1,0 +1,42 @@
+@startuml
+node "MySQL Server" as db <<database>> {
+  database "MySQL Database v8.0" as mysql
+}
+
+node "Django Server" as django <<web server>> {
+  artifact "Django v4.2" as dj
+  artifact "Gunicorn/WSGI" as gunicorn
+  file "S3/Local storage" as s3
+}
+
+node "Web Clients" as web <<browser>> {
+  artifact "HTML/CSS/JS" as front
+}
+
+node "Android Clients" as android <<mobile>> {
+  artifact "Kotlin App" as app
+}
+
+web --> django : HTTP/HTTPS\n(веб-интерфейс)
+android --> django : REST API\n(HTTPS)
+django ..> db : MySQL Protocol\n(зависимость)
+
+note top of django
+  **Политики безопасности:**
+  1. Межсетевой экран между серверами
+  2. TLS для внешних соединений
+  3. JWT-аутентификация
+  4. Контроль доступа:
+     - Личные файлы: RW для владельца
+     - Публичные файлы: R для всех
+end note
+
+cloud {
+  [Internet]
+}
+
+web ..> [Internet]
+android ..> [Internet]
+[Internet] ..> django
+
+@enduml

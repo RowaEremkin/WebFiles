@@ -1,0 +1,33 @@
+@startuml
+actor User
+
+participant "Web Client" as Client
+participant "Django Server\n(Files Module)" as ServerFiles
+participant "Django Server\n(Database Module)" as ServerDB
+participant "Storage (S3/Local)" as Storage
+participant "WebSocket Server" as WebSocket
+
+User -> Client : Выбрать файл и папку для загрузки
+Client -> ServerFiles : POST /upload (файл, папка)
+activate ServerFiles
+
+ServerFiles -> ServerDB : Проверить уникальность имени файла
+ServerDB --> ServerFiles : Результат проверки
+
+alt Имя файла занято
+  ServerFiles -> ServerFiles : Добавить суффикс (n) к имени
+end
+
+ServerFiles -> Storage : Сохранить файл
+Storage --> ServerFiles : Подтверждение сохранения
+
+ServerFiles -> ServerDB : Записать метаданные файла
+ServerDB --> ServerFiles : Подтверждение записи
+
+ServerFiles -> Client : Ответ о успешной загрузке
+deactivate ServerFiles
+
+ServerFiles -> WebSocket : Отправить уведомление о новом файле
+WebSocket -> Client : Обновить список файлов (push)
+
+@enduml

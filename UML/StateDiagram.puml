@@ -1,0 +1,32 @@
+@startuml
+title State Diagram для File
+[*] --> New : Создание файла (инициализация)
+
+New --> Uploaded : Файл загружен
+Uploaded --> Renaming : Запрос на переименование
+Renaming --> Uploaded : Переименование успешно
+Renaming --> Error : Ошибка переименования
+
+Uploaded --> Editing : Редактирование метаданных
+Editing --> Uploaded : Сохранение изменений
+
+Uploaded --> Publishing : Публикация файла
+Publishing --> Published : Файл опубликован
+Published --> Unpublishing : Снятие с публикации
+Unpublishing --> Uploaded : Файл снова приватный
+
+Uploaded --> Deleting : Запрос на удаление
+Published --> Deleting : Запрос на удаление
+
+Deleting --> Deleted : Файл удалён
+Deleted --> [*]
+
+Uploaded --> Error : Ошибка загрузки/обработки
+Editing --> Error : Ошибка редактирования
+Publishing --> Error : Ошибка публикации
+Unpublishing --> Error : Ошибка снятия с публикации
+Deleting --> Error : Ошибка удаления
+
+Error --> Uploaded : Повтор попытки / исправление
+
+@enduml
